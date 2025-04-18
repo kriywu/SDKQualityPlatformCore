@@ -6,12 +6,17 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.ByteString
 
 /**
  * Created by wurengao on 2025/4/18
  * @author wurengao@bytedance.com
  */
+
+interface IWebSocketListener {
+    fun onOpen(webSocket: WebSocket, response: Response)
+    fun onMessage(webSocket: WebSocket, text: String)
+    fun onClosing(webSocket: WebSocket, code: Int, reason: String)
+}
 
 
 object WebSocketClient {
@@ -20,7 +25,7 @@ object WebSocketClient {
     private val client = OkHttpClient()
     private var isConnected = false
 
-    fun connect(host: String, did: String, os: String) {
+    fun connect(host: String, did: String, os: String, listener: IWebSocketListener) {
         if (isConnected) {
             Log.d(TAG, "connect: already connected")
             return
@@ -32,24 +37,19 @@ object WebSocketClient {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(TAG, "WebSocket Opened")
                 isConnected = true
+                listener.onOpen(webSocket, response)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d(TAG, "Received message: $text")
-            }
-
-            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-                Log.d(TAG, "Received bytes: " + bytes.hex())
+                listener.onMessage(webSocket, text)
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d(TAG, "WebSocket Closing: $reason")
                 webSocket.close(1000, null)
                 isConnected = false
-            }
-
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                Log.e(TAG, "WebSocket Error: " + t.message)
+                listener.onClosing(webSocket, code, reason)
             }
         })
         client.dispatcher.executorService.shutdown()
