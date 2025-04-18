@@ -1,6 +1,6 @@
 import asyncio
 import json
-
+import ssl
 from aiohttp import web
 from aiohttp.web_request import Request
 
@@ -23,8 +23,8 @@ class Device:
         }
 
 
-
 async def websocket_handler(request: Request):
+    print("websocket_handler run")
     ws = web.WebSocketResponse()
     await ws.prepare(request)
     async for msg in ws:
@@ -88,6 +88,7 @@ async def release_handler(request: Request):
             break
     return web.Response(text=json.dumps({"error": 0, "message": "success"}))
 
+
 async def log_handler(request: Request):
     global gLog
     did = request.query.get('did', '')
@@ -99,13 +100,17 @@ async def log_handler(request: Request):
     return web.Response(text=json.dumps({"error": 0, "message": "success"}))
 
 
+async def hello_handler(request):
+    return web.Response(text="Hello, world!")
+
+
 gDeviceList = [Device("mock_did", "android")]
 gWebsocketHandler = {
     'register': register_handler,
     'unregister': unregister_handler,
     'sendCommand': sendCommand_handler,
 }
-gLog = {} # did:logs
+gLog = {}  # did:logs
 
 
 # 启动服务
@@ -116,10 +121,11 @@ async def main():
     app.router.add_get('/command', command_handler)
     app.router.add_get('/release', release_handler)
     app.router.add_get('/log', log_handler)
+    app.router.add_get('/hello', hello_handler)
     runner = web.AppRunner(app)
 
     await runner.setup()
-    await web.TCPSite(runner, 'localhost', 8080).start()
+    await web.TCPSite(runner, '0.0.0.0', 1234).start()
     await asyncio.Future()
 
 
