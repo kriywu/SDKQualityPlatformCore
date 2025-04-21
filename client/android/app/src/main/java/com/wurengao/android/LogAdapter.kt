@@ -12,9 +12,9 @@ import androidx.recyclerview.widget.RecyclerView
  */
 
 
-class LogAdapter(data: List<String>) :
+class LogAdapter(data: List<LogItem>) :
     RecyclerView.Adapter<LogAdapter.ViewHolder?>() {
-    private val mData: List<String>
+    private val mData: List<LogItem>
 
     init {
         mData = data
@@ -26,7 +26,7 @@ class LogAdapter(data: List<String>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.textView.text = mData[position]
+        holder.textView.text = mData[position].toString()
     }
 
     override fun getItemCount(): Int {
