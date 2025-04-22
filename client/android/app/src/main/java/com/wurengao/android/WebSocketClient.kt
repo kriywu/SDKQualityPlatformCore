@@ -6,6 +6,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okio.ByteString
 
 /**
  * Created by wurengao on 2025/4/18
@@ -42,6 +43,11 @@ object WebSocketClient {
             override fun onMessage(webSocket: WebSocket, text: String) {
                 Log.d(TAG, "Received message $text")
                 listener.onMessage(webSocket, text)
+            }
+
+            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+                Log.d(TAG, "Received message $bytes")
+                super.onMessage(webSocket, bytes)
             }
 
             override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {

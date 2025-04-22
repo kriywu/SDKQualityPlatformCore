@@ -7,7 +7,7 @@ class TestHelloWorld(BaseTestCase):
 
     def run(self):
         # 占用设备
-        device = DeviceProxy("1234567", 'android')
+        device = DeviceProxy(device_id="20250418001", os='android')
         device.acquire()
 
         mathEngine = MathEngine(device)
@@ -18,3 +18,7 @@ class TestHelloWorld(BaseTestCase):
         device.release()
 
         assert result == 2
+
+
+if __name__ == '__main__':
+    TestHelloWorld().run()

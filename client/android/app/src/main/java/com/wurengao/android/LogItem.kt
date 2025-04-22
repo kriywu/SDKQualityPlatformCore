@@ -14,6 +14,6 @@ data class LogItem(val message: String) {
     }
 
     override fun toString(): String {
-        return "$time $message"
+        return "$time | $message"
     }
 }

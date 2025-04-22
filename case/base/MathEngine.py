@@ -10,10 +10,11 @@ class MathEngine:
 
     def createEngine(self):
         api = APIElement(
-            self_instance_key=None,
+            self_instance_key="",
             api_name="createEngine",
             parameters={},
-            return_value_key=None
+            return_value_key=self.ins_key,
+            device_id=self.deviceProxy.device_id
         )
         self.deviceProxy.command(api)
 
@@ -22,15 +23,18 @@ class MathEngine:
             self_instance_key=self.ins_key,
             api_name="plus",
             parameters={"leftValue": leftValue, "rightValue": rightValue},
-            return_value_key=None
+            return_value_key="",
+            device_id=self.deviceProxy.device_id
         )
-        self.deviceProxy.command(api)
+        result = self.deviceProxy.command(api)
+        return int(result.data)
 
     def destroyEngine(self):
         api = APIElement(
             self_instance_key=self.ins_key,
             api_name="destroyEngine",
             parameters={},
-            return_value_key=None
+            return_value_key="",
+            device_id=self.deviceProxy.device_id
         )
         self.deviceProxy.command(api)

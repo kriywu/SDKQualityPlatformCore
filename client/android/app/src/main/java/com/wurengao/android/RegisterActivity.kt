@@ -6,7 +6,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
+import com.wurengao.android.dispatcher.CommandDispatcher
+import com.wurengao.android.proto.APICommand
 import okhttp3.WebSocket
+import org.json.JSONObject
 
 class RegisterActivity : AppCompatActivity(), IWebSocketListener {
 
@@ -42,24 +45,70 @@ class RegisterActivity : AppCompatActivity(), IWebSocketListener {
         }
 
         unregisterButton.setOnClickListener {
+            val unregisterJson = """
+                {
+                    "event": "unregister",
+                    "data": {
+                        "os": "${osEditText.text}",
+                        "device_id": "${deviceIDEditText.text}"
+                    }
+                }
+            """.trimIndent()
+            WebSocketClient.sendMessage(unregisterJson)
             WebSocketClient.disconnect()
         }
     }
 
     private fun smoothScrollToTopPosition(logItem: LogItem) {
         logView.post {
-            dataList.add(0, logItem)
-            adapter.notifyItemInserted(0)
-            logView.smoothScrollToPosition(0)
+            dataList.add(logItem)
+            adapter.notifyItemInserted(dataList.size - 1)
+            logView.smoothScrollToPosition(dataList.size - 1)
         }
     }
 
     override fun onOpen(webSocket: WebSocket, message: String?, isAlreadyConnected: Boolean) {
         smoothScrollToTopPosition(LogItem("onOpen $message isAlreadyConnected=$isAlreadyConnected"))
+
+        val json = """
+            {
+                "event": "register",
+                "data": {
+                    "os": "${osEditText.text}",
+                    "device_id": "${deviceIDEditText.text}"
+                }
+            }
+        """.trimIndent()
+        webSocket.send(json)
     }
 
     override fun onMessage(webSocket: WebSocket, text: String) {
+        val json = JSONObject(text)
 
+        if (json.has("event") && json["event"] == "command") {
+
+            val command = APICommand(
+                clz = json["clz"].toString(),
+                instance = json["instance"].toString(),
+                api_name = json["api_name"].toString(),
+                params = json["params"] as JSONObject,
+                return_value = json["return_value"].toString(),
+                thread_id = json["thread_id"].toString(),
+                device_id = json["device_id"].toString()
+            )
+
+            smoothScrollToTopPosition(LogItem("call api=${command.api_name} params=${command.params}"))
+
+            val result = CommandDispatcher.dispatch(command)
+
+            smoothScrollToTopPosition(LogItem("result ${result?.returnValue}"))
+
+            if (result!= null) {
+                webSocket.send(result.toJSON())
+            }
+        } else {
+//            smoothScrollToTopPosition(LogItem("onMessage $text"))
+        }
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
